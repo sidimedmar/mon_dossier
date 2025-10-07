@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse de la Vaccination</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-family: Arial, sans-serif;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        select {
+            padding: 8px;
+            margin: 10px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analyse de la Vaccination</h1>
+    <h2>Statistiques Générales</h2>
+    <ul>
+        {% for key, value in stats_generales.items() %}
+            <li>{{ key }}: {{ value }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Filtres</h2>
+    <form method="post">
+        <label for="point_sante">Sélectionner un point de santé:</label>
+        <select name="point_sante" id="point_sante">
+            {% for point in points_sante %}
+                <option value="{{ point }}" {% if point == selected_point %}selected{% endif %}>{{ point }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="commune">Sélectionner une commune:</label>
+        <select name="commune" id="commune">
+            {% for commune in communes %}
+                <option value="{{ commune }}" {% if commune == selected_commune %}selected{% endif %}>{{ commune }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="enqueteur">Sélectionner un enquêteur:</label>
+        <select name="enqueteur" id="enqueteur">
+            {% for enqueteur in enqueteurs %}
+                <option value="{{ enqueteur }}" {% if enqueteur == selected_enqueteur %}selected{% endif %}>{{ enqueteur }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="whatsapp">Sélectionner un contact WhatsApp:</label>
+        <select name="whatsapp" id="whatsapp">
+            {% for whatsapp in whatsapps %}
+                <option value="{{ whatsapp }}" {% if whatsapp == selected_whatsapp %}selected{% endif %}>{{ whatsapp }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="submit" value="Filtrer">
+    </form>
+
+    <h2>Statistiques par Point de Santé</h2>
+    <div id="graph_point" style="width: 100%; height: 500px;"></div>
+    <script>
+        var graphDataPoint = {{ graphJSON_point | safe }};
+        Plotly.newPlot('graph_point', graphDataPoint.data, graphDataPoint.layout);
+    </script>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom du point de vaccinatio</th>
+                <th>Nombre d'enfants en âge de vaccination</th>
+                <th>Nombre d'enfants (zéro dose)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in stats_par_point %}
+            <tr>
+                <td>{{ stat['Nom du point de vaccinatio'] }}</td>
+                <td>{{ stat['Nombre d\'enfants en âge de vaccination'] }}</td>
+                <td>{{ stat['Nombre d\'enfants (zéro dose)'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Statistiques par Commune</h2>
+    <div id="graph_commune" style="width: 100%; height: 500px;"></div>
+    <script>
+        var graphDataCommune = {{ graphJSON_commune | safe }};
+        Plotly.newPlot('graph_commune', graphDataCommune.data, graphDataCommune.layout);
+    </script>
+    <table>
+        <thead>
+            <tr>
+                <th>Commune</th>
+                <th>Nombre d'enfants en âge de vaccination</th>
+                <th>Nombre d'enfants (zéro dose)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in stats_par_commune %}
+            <tr>
+                <td>{{ stat.Commune }}</td>
+                <td>{{ stat['Nombre d\'enfants en âge de vaccination'] }}</td>
+                <td>{{ stat['Nombre d\'enfants (zéro dose)'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Carte GPS des Points de Vaccination</h2>
+    {{ map_html | safe }}
+</body>
+</html>
