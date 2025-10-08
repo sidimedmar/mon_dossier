@@ -144,5 +144,6 @@ def index():
                            map_html=map_html, whatsapps=whatsapps, selected_whatsapp=selected_whatsapp,
                            enqueteurs=enqueteurs, selected_enqueteur=selected_enqueteur)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    server.run(debug=True)
+
