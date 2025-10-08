@@ -6,7 +6,7 @@ import plotly
 import plotly.express as px
 import json
 from geopy.distance import geodesic
-
+import os
 app = Flask(__name__)
 
 # Coordonnées GPS de Nema (chef-lieu)
@@ -118,7 +118,8 @@ def index():
                 """,
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(marker_cluster)
-
+# Juste avant m.save(...)
+os.makedirs("templates", exist_ok=True)
         m.save('templates/map.html')
         with open('templates/map.html', 'r', encoding='utf-8') as f:
             map_html = f.read()
@@ -146,4 +147,5 @@ def index():
 
 if __name__ == "__main__":
     server.run(debug=True)
+
 
