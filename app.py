@@ -6,11 +6,14 @@ import plotly
 import plotly.express as px
 import json
 from geopy.distance import geodesic
-import os
+
 app = Flask(__name__)
 
 # Coordonnées GPS de Nema (chef-lieu)
-nema_coords = (16.6167, -7.2500)  # Exemple de coordonnées, remplacez-les par les vraies coordonnées de Nema
+nema_coords = (16.6167, -7.2500)  # Exemple de coordonnées
+
+def clean_text_column(series):
+    return series.apply(lambda x: str(x) if pd.notnull(x) else '')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -63,19 +66,32 @@ def index():
     stats_par_point = filtered_data.groupby('Nom du point de vaccinatio').agg({
         'Nombre d\'enfants en âge de vaccination': 'sum',
         'Nombre d\'enfants (zéro dose)': 'sum',
-        "Source d'énergie de l'unité": lambda x: ', '.join(x.unique())
+        "Source d'énergie de l'unité": lambda x: ', '.join(clean_text_column(x).unique())
     }).reset_index()
 
     # Calculer les statistiques par commune
     stats_par_commune = filtered_data.groupby('Commune').agg({
         'Nombre d\'enfants en âge de vaccination': 'sum',
         'Nombre d\'enfants (zéro dose)': 'sum',
-        "Source d'énergie de l'unité": lambda x: ', '.join(x.unique())
+        "Source d'énergie de l'unité": lambda x: ', '.join(clean_text_column(x).unique())
+    }).reset_index()
+
+    # Ajouter les défis et solutions
+    defis_solutions_par_point = filtered_data.groupby('Nom du point de vaccinatio').agg({
+        'Quels sont les principaux défis que vous rencontrez ?': lambda x: ', '.join(clean_text_column(x).unique()),
+        'Quelles sont vos propositions de solutions ?': lambda x: ', '.join(clean_text_column(x).unique())
+    }).reset_index()
+
+    defis_solutions_par_commune = filtered_data.groupby('Commune').agg({
+        'Quels sont les principaux défis que vous rencontrez ?': lambda x: ', '.join(clean_text_column(x).unique()),
+        'Quelles sont vos propositions de solutions ?': lambda x: ', '.join(clean_text_column(x).unique())
     }).reset_index()
 
     # Convertir les statistiques en dictionnaire pour les passer au template
     stats_par_point_dict = stats_par_point.to_dict(orient='records')
     stats_par_commune_dict = stats_par_commune.to_dict(orient='records')
+    defis_solutions_par_point_dict = defis_solutions_par_point.to_dict(orient='records')
+    defis_solutions_par_commune_dict = defis_solutions_par_commune.to_dict(orient='records')
 
     # Créer un graphique avec Plotly pour les points de santé
     fig_point = px.bar(stats_par_point, x='Nom du point de vaccinatio',
@@ -118,8 +134,7 @@ def index():
                 """,
                 icon=folium.Icon(color='blue', icon='info-sign')
             ).add_to(marker_cluster)
-# Juste avant m.save(...)
-os.makedirs("templates", exist_ok=True)
+
         m.save('templates/map.html')
         with open('templates/map.html', 'r', encoding='utf-8') as f:
             map_html = f.read()
@@ -143,9 +158,9 @@ os.makedirs("templates", exist_ok=True)
                            selected_point=selected_point, selected_commune=selected_commune,
                            graphJSON_point=graphJSON_point, graphJSON_commune=graphJSON_commune,
                            map_html=map_html, whatsapps=whatsapps, selected_whatsapp=selected_whatsapp,
-                           enqueteurs=enqueteurs, selected_enqueteur=selected_enqueteur)
+                           enqueteurs=enqueteurs, selected_enqueteur=selected_enqueteur,
+                           defis_solutions_par_point=defis_solutions_par_point_dict,
+                           defis_solutions_par_commune=defis_solutions_par_commune_dict)
 
-if __name__ == "__main__":
-    server.run(debug=True)
-
-
+if __name__ == '__main__':
+    app.run(debug=True)
