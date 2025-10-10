@@ -1,9 +1,0 @@
-flask
-pandas
-geopy
-folium
-plotly
-dash
-dash-bootstrap-components
-gunicorn
-openpyxl
